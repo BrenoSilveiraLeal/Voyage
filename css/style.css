@@ -35,7 +35,10 @@ img.art { width: 100%; height: 100%; object-fit: cover; user-select: none; -webk
 .ph { opacity: 0; transition: opacity .9s var(--ease); }
 .ph.is-loaded { opacity: 1; }
 .ph.is-broken { visibility: hidden; }
-body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [role="tab"] { cursor: none; }
+/* Cursor personalizado nativo (desenhado pelo sistema: sem atraso e sem rastros na tela) */
+body.has-cursor { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='15' fill='none' stroke='%231d1a16' stroke-opacity='.4' stroke-width='3.5'/%3E%3Ccircle cx='20' cy='20' r='15' fill='none' stroke='%23fff' stroke-width='1.5'/%3E%3Ccircle cx='20' cy='20' r='2.6' fill='%23fff' stroke='%231d1a16' stroke-opacity='.6'/%3E%3C/svg%3E") 20 20, auto; }
+body.has-cursor :is(a, button, [role="tab"], select, label, summary, [data-cursor]) { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Ccircle cx='28' cy='28' r='22' fill='%23fff' fill-opacity='.22' stroke='%231d1a16' stroke-opacity='.4' stroke-width='3.5'/%3E%3Ccircle cx='28' cy='28' r='22' fill='none' stroke='%23fff' stroke-width='1.5'/%3E%3Ccircle cx='28' cy='28' r='2.6' fill='%23fff' stroke='%231d1a16' stroke-opacity='.6'/%3E%3C/svg%3E") 28 28, pointer; }
+body.has-cursor :is(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea) { cursor: text; }
 
 /* ---------- botões ---------- */
 .btn {
@@ -86,23 +89,6 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .toast { position: fixed; left: 50%; bottom: 24px; z-index: 120; max-width: min(560px, calc(100% - 32px)); padding: 16px 20px; border-radius: 16px; background: var(--ink); color: #fff; font-weight: 500; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .5); transform: translate(-50%, 140%); opacity: 0; transition: transform .6s var(--ease), opacity .4s; pointer-events: none; }
 .toast.is-on { transform: translate(-50%, 0); opacity: 1; }
 
-/* ---------- cursor ---------- */
-/* Cursor: sem mix-blend-mode (causava rastro de bolinhas e travava a rolagem no Windows).
-   Anel e ponto em dois tons — claro com contorno escuro — aparecem em fundo claro e escuro.
-   Tamanho muda com transform (sem recalcular layout). */
-.cursor { display: contents; }
-.cursor__dot, .cursor__pos { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; will-change: transform; transition: opacity .3s; }
-.cursor.is-hidden .cursor__dot, .cursor.is-hidden .cursor__pos { opacity: 0; }
-.cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(29, 26, 22, .55); }
-.cursor__pos { width: 0; height: 0; }
-.cursor__ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .9); box-shadow: 0 0 0 2.5px rgba(29, 26, 22, .35), inset 0 0 0 2.5px rgba(29, 26, 22, .35); display: grid; place-items: center; transform: scale(.396); transition: transform .45s var(--ease), background-color .35s, border-color .35s, box-shadow .35s; }
-.cursor__ring span { color: #fff; font: 600 12px/1.1 var(--sans); text-align: center; opacity: 0; transition: opacity .3s; padding: 0 8px; }
-.cursor.is-link .cursor__ring { transform: scale(.604); background: rgba(255, 255, 255, .15); border-width: 1.7px; box-shadow: 0 0 0 1.7px rgba(29, 26, 22, .35), inset 0 0 0 1.7px rgba(29, 26, 22, .35); }
-.cursor.is-label .cursor__ring { box-shadow: none; }
-.cursor.is-label .cursor__dot { opacity: 0; }
-.cursor.is-label .cursor__ring { transform: none; background: var(--accent); border-color: var(--accent); }
-.cursor.is-label .cursor__ring span { opacity: 1; }
-.cursor.is-down .cursor__ring { transform: scale(.29); }
 
 /* ---------- navegação ---------- */
 .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 24px; padding: 20px var(--gut); color: var(--ink); transition: transform .65s var(--ease-io), background-color .45s, padding .45s, color .45s, box-shadow .45s; view-transition-name: site-nav; }
@@ -246,6 +232,7 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 
 /* animações das ilustrações */
 .anim-off, .anim-off * { animation-play-state: paused !important; }
+.anim-off .hs__track, .anim-off .hs__bar span { animation-play-state: running !important; } /* seguem a rolagem, não o tempo */
 .drift { animation: drift 26s ease-in-out infinite alternate; }
 .drift-slow { animation: drift 40s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translateX(40px); } }
@@ -345,6 +332,16 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .hs__bar { width: min(260px, 30vw); height: 2px; background: rgba(239, 231, 218, .18); flex: none; }
 .hs__bar span { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; }
 .hs__track { display: flex; gap: 22px; width: max-content; padding: 0 var(--gut) 0 max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); will-change: transform; }
+/* Onde o navegador suporta, a rolagem move a faixa diretamente (sem JS a cada frame = sem tremer). */
+@supports (animation-timeline: view()) {
+  @media (min-width: 761px) {
+    .hs { view-timeline: --hs block; }
+    .hs__track { animation: hs-move linear both; animation-timeline: --hs; animation-range: contain 0% contain 100%; }
+    .hs__bar span { animation: hs-bar linear both; animation-timeline: --hs; animation-range: contain 0% contain 100%; }
+  }
+}
+@keyframes hs-move { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(calc(-1 * var(--hs-dist, 0px)), 0, 0); } }
+@keyframes hs-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .xcard { position: relative; flex: none; width: clamp(290px, 32vw, 460px); height: min(60vh, 580px); overflow: hidden; isolation: isolate; border-radius: var(--r); color: #fff; }
 .xcard > .art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; transition: transform 1.4s var(--ease); }
 .xcard:hover > .art { transform: scale(1.07); }

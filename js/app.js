@@ -1100,11 +1100,15 @@
   }
 
   /* ---------- rolagem horizontal fixa ---------- */
+  // Navegadores com animação ligada à rolagem movem a faixa pelo CSS; os outros usam o loop em JS.
+  const HS_CSS = !!(window.CSS && CSS.supports('animation-timeline: view()'));
   function sizeHS() {
     const hs = scroller.hs; if (!hs) return;
     const track = $('.hs__track', hs);
     if (innerWidth <= 760) { hs.style.height = ''; track.style.transform = ''; return; }
-    hs.style.height = `${track.scrollWidth - innerWidth + innerHeight + 40}px`;
+    const dist = track.scrollWidth - innerWidth;
+    hs.style.height = `${dist + innerHeight + 40}px`;
+    hs.style.setProperty('--hs-dist', `${dist}px`); // usado pela animação ligada à rolagem (CSS)
   }
 
   /* ---------- destino: capa ---------- */
@@ -1486,40 +1490,9 @@
     f.reset();
   });
 
-  // Cursor personalizado
-  if (fine && !reduce) {
-    const cur = $('#cursor'), dot = $('.cursor__dot', cur), ring = $('.cursor__pos', cur), label = $('.cursor__ring span', cur);
-    let mx = -100, my = -100, rx = -100, ry = -100, raf = 0, last = 0, curLab = null, curLink = false;
-    document.body.classList.add('has-cursor');
-    // O anel segue o mouse de forma suave mas rápida, igual em 60 Hz ou 144 Hz, e o loop para quando alcança o mouse.
-    function loop(t) {
-      const dt = Math.min(64, t - (last || t)); last = t;
-      const k = 1 - Math.exp(-dt / 45);
-      rx += (mx - rx) * k; ry += (my - ry) * k;
-      if (Math.abs(mx - rx) < 0.1 && Math.abs(my - ry) < 0.1) { rx = mx; ry = my; }
-      ring.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
-      if (rx !== mx || ry !== my) raf = requestAnimationFrame(loop); else { raf = 0; last = 0; }
-    }
-    addEventListener('pointermove', e => {
-      mx = e.clientX; my = e.clientY;
-      dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
-      if (rx < -50) { rx = mx; ry = my; } // primeira aparição: sem "voar" do canto
-      if (cur.classList.contains('is-hidden')) cur.classList.remove('is-hidden');
-      if (!raf) raf = requestAnimationFrame(loop);
-    }, { passive: true });
-    document.addEventListener('pointerleave', () => cur.classList.add('is-hidden'));
-    document.addEventListener('pointerover', e => {
-      const lab = e.target.closest('[data-cursor]');
-      const link = !lab && !!e.target.closest('a, button, [role="tab"], select, label, input');
-      if (lab === curLab && link === curLink) return; // nada mudou: não mexe nas classes
-      curLab = lab; curLink = link;
-      cur.classList.toggle('is-label', !!lab);
-      cur.classList.toggle('is-link', link);
-      if (lab) label.textContent = lab.dataset.cursor;
-    }, { passive: true });
-    document.addEventListener('pointerdown', () => cur.classList.add('is-down'));
-    document.addEventListener('pointerup', () => cur.classList.remove('is-down'));
-  }
+  // Cursor personalizado: desenhado pelo sistema (cursor CSS em SVG), não por elementos da página.
+  // A versão antiga, com bolinhas em HTML seguindo o mouse, deixava rastros na tela em algumas placas de vídeo.
+  if (fine) document.body.classList.add('has-cursor');
 
   // Loop de rolagem: barra de progresso, menu, parallax, marquee, seção horizontal, roteiro
   const nav = $('#nav'), progress = $('#progress');
@@ -1535,7 +1508,7 @@
     let max = 0, hs = null, plan = null, subH = 0, topH = 0, mqHalf = 0;
     if (moved) {
       max = document.documentElement.scrollHeight - ih;
-      if (scroller.hs && iw > 760) {
+      if (scroller.hs && iw > 760 && !HS_CSS) {
         const track = $('.hs__track', scroller.hs), r = scroller.hs.getBoundingClientRect();
         hs = { track, bar: $('.hs__bar span', scroller.hs), top: r.top, h: r.height, dist: track.scrollWidth - iw };
       }
