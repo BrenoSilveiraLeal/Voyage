@@ -423,9 +423,10 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .dhero__scroll { position: absolute; right: var(--gut); bottom: 40px; width: 1px; height: 70px; background: rgba(255, 255, 255, .25); overflow: hidden; }
 .dhero__scroll i { position: absolute; inset: 0 0 50%; background: #fff; animation: scrollcue 1.8s var(--ease-io) infinite; }
 
-.subnav { position: fixed; left: 50%; top: 84px; z-index: 40; display: flex; gap: 2px; padding: 5px; border-radius: 99px; background: rgba(29, 26, 22, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; transform: translate(-50%, -30px); opacity: 0; pointer-events: none; transition: transform .6s var(--ease), opacity .4s, top .65s var(--ease-io); box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .5); }
+.subnav { position: fixed; left: 50%; top: 84px; z-index: 40; display: flex; gap: 2px; padding: 5px; border-radius: 99px; background: rgba(29, 26, 22, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; transform: translate(-50%, -30px); opacity: 0; pointer-events: none; transition: transform .6s var(--ease-io), opacity .4s; box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .5); }
 .subnav.is-on { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
-body.nav-hidden .subnav { top: 14px; }
+/* sobe com transform (não com top) para não recalcular layout durante a rolagem */
+body.nav-hidden .subnav.is-on { transform: translate(-50%, -70px); }
 .subnav a { padding: 9px 15px; border-radius: 99px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; transition: background-color .35s, color .35s; }
 .subnav a.is-on { background: #fff; color: var(--ink); }
 
@@ -909,6 +910,7 @@ body.nav-hidden .subnav { top: 14px; }
   .map { border-radius: 18px; }
   .srow__foot .btn { display: none; }
   .subnav { top: auto !important; bottom: 14px; max-width: calc(100% - 24px); overflow-x: auto; scrollbar-width: none; transform: translate(-50%, 30px); }
+  body.nav-hidden .subnav.is-on { transform: translate(-50%, 0); }
   .subnav a { padding: 9px 12px; font-size: 13px; }
   .sheet__panel { border-radius: 0; }
   .sheet__top .btn { display: none; }

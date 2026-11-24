@@ -822,6 +822,7 @@
     scroller.plan = $('.plan__list', root);
     scroller.subnav = $('.subnav', root);
     scroller.marquee = $('.marquee__track', root);
+    lastW = -1; // força o loop de rolagem a recalcular na nova página
     $('#nav').classList.toggle('is-light', r.view !== 'stays' && r.view !== 'packages');
     markLoaded(root);
     if (scroller.hero) initHeroSlides(scroller.hero);
@@ -1498,54 +1499,74 @@
 
   // Loop de rolagem: barra de progresso, menu, parallax, marquee, seção horizontal, roteiro
   const nav = $('#nav'), progress = $('#progress');
-  let lastY = scrollY, vel = 0, mqX = 0, mqDir = 1, navHidden = false;
+  // Importante: primeiro LÊ todo o layout, depois ESCREVE estilos. Misturar as duas coisas
+  // força o navegador a recalcular o layout várias vezes por frame e a rolagem engasga/pula.
+  let lastY = scrollY, vel = 0, mqX = 0, mqDir = 1, navHidden = false, navAcc = 0, lastW = -1;
   function frame() {
-    const y = scrollY, dy = y - lastY;
-    lastY = y; vel = vel * 0.86 + dy * 0.14;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
-    nav.classList.toggle('is-scrolled', y > 40);
-    if (!sheet.el && !document.body.classList.contains('menu-open')) {
-      if (dy > 4 && y > 320 && !navHidden) { navHidden = true; nav.classList.add('is-hidden'); document.body.classList.add('nav-hidden'); }
-      else if (dy < -4 && navHidden) { navHidden = false; nav.classList.remove('is-hidden'); document.body.classList.remove('nav-hidden'); }
-    }
-    if (!reduce) {
-      if (scroller.hero && y < innerHeight * 1.3) scroller.heroLayers.forEach(l => { l.style.transform = `translate3d(0, ${(y * +l.dataset.depth).toFixed(1)}px, 0)`; });
-      if (scroller.dhero && y < innerHeight * 1.2) {
-        const art = $('.dhero__art', scroller.dhero), inner = $('.dhero__inner', scroller.dhero);
-        art.style.transform = `translate3d(0, ${(y * 0.35).toFixed(1)}px, 0) scale(${1 + y / 4000})`;
-        inner.style.opacity = clamp(1 - y / (innerHeight * 0.6), 0, 1);
-        inner.style.transform = `translate3d(0, ${(y * 0.15).toFixed(1)}px, 0)`;
+    const y = scrollY, dy = y - lastY, ih = innerHeight, iw = innerWidth;
+    const moved = dy !== 0 || iw !== lastW;
+    lastY = y; lastW = iw; vel = vel * 0.86 + dy * 0.14;
+
+    // ---- leituras ----
+    let max = 0, hs = null, plan = null, subH = 0, topH = 0, mqHalf = 0;
+    if (moved) {
+      max = document.documentElement.scrollHeight - ih;
+      if (scroller.hs && iw > 760) {
+        const track = $('.hs__track', scroller.hs), r = scroller.hs.getBoundingClientRect();
+        hs = { track, bar: $('.hs__bar span', scroller.hs), top: r.top, h: r.height, dist: track.scrollWidth - iw };
       }
-      if (scroller.marquee) {
-        if (Math.abs(vel) > 0.5) mqDir = vel > 0 ? 1 : -1;
-        mqX -= (0.6 + Math.min(Math.abs(vel) * 0.35, 14)) * mqDir;
-        const half = scroller.marquee.scrollWidth / 2;
-        if (mqX <= -half) mqX += half; if (mqX > 0) mqX -= half;
-        scroller.marquee.style.transform = `translate3d(${mqX.toFixed(1)}px, 0, 0) skewX(${clamp(-vel * 0.4, -10, 10).toFixed(2)}deg)`;
+      if (scroller.plan) {
+        const r = scroller.plan.getBoundingClientRect(), days = $$('.day', scroller.plan);
+        plan = { top: r.top, h: r.height, days, tops: days.map(dd => dd.getBoundingClientRect().top) };
       }
+      if (scroller.subnav) subH = scroller.dhero ? scroller.dhero.offsetHeight : 0;
+      const top = scroller.dhero || scroller.hero;
+      topH = top ? top.offsetHeight : 0;
     }
-    if (scroller.hs && innerWidth > 760) {
-      const r = scroller.hs.getBoundingClientRect(), track = $('.hs__track', scroller.hs);
-      const p = clamp(-r.top / (r.height - innerHeight), 0, 1), dist = track.scrollWidth - innerWidth;
-      track.style.transform = `translate3d(${(-p * dist).toFixed(1)}px, 0, 0)`;
-      $('.hs__bar span', scroller.hs).style.transform = `scaleX(${p})`;
+    if (!reduce && scroller.marquee) mqHalf = scroller.marquee._half || (scroller.marquee._half = scroller.marquee.scrollWidth / 2);
+
+    // ---- escritas ----
+    if (moved) {
+      progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+      nav.classList.toggle('is-scrolled', y > 40);
+      // esconde/mostra o menu só depois de um deslocamento contínuo (evita ficar piscando)
+      if (!sheet.el && !document.body.classList.contains('menu-open')) {
+        navAcc = Math.sign(dy) === Math.sign(navAcc) ? navAcc + dy : dy;
+        if (navAcc > 60 && y > 320 && !navHidden) { navHidden = true; nav.classList.add('is-hidden'); document.body.classList.add('nav-hidden'); }
+        else if ((navAcc < -60 || y < 120) && navHidden) { navHidden = false; nav.classList.remove('is-hidden'); document.body.classList.remove('nav-hidden'); }
+      }
+      if (!reduce) {
+        if (scroller.hero && y < ih * 1.3) scroller.heroLayers.forEach(l => { l.style.transform = `translate3d(0, ${(y * +l.dataset.depth).toFixed(1)}px, 0)`; });
+        if (scroller.dhero && y < ih * 1.2) {
+          const art = $('.dhero__art', scroller.dhero), inner = $('.dhero__inner', scroller.dhero);
+          art.style.transform = `translate3d(0, ${(y * 0.35).toFixed(1)}px, 0) scale(${1 + y / 4000})`;
+          inner.style.opacity = clamp(1 - y / (ih * 0.6), 0, 1);
+          inner.style.transform = `translate3d(0, ${(y * 0.15).toFixed(1)}px, 0)`;
+        }
+      }
+      if (hs) {
+        const p = clamp(-hs.top / (hs.h - ih), 0, 1);
+        hs.track.style.transform = `translate3d(${(-p * hs.dist).toFixed(1)}px, 0, 0)`;
+        hs.bar.style.transform = `scaleX(${p})`;
+      }
+      if (plan) {
+        const mark = ih * 0.62;
+        scroller.plan.style.setProperty('--p', clamp((mark - plan.top) / plan.h, 0, 1).toFixed(3));
+        plan.days.forEach((dd, i) => dd.classList.toggle('is-on', plan.tops[i] < mark));
+      }
+      if (scroller.subnav) scroller.subnav.classList.toggle('is-on', y > subH - 120);
+      nav.classList.toggle('is-light', topH > 0 && y < topH - 80);
     }
-    if (scroller.plan) {
-      const r = scroller.plan.getBoundingClientRect(), mark = innerHeight * 0.62;
-      scroller.plan.style.setProperty('--p', clamp((mark - r.top) / r.height, 0, 1).toFixed(3));
-      $$('.day', scroller.plan).forEach(dd => dd.classList.toggle('is-on', dd.getBoundingClientRect().top < mark));
+    if (!reduce && scroller.marquee && mqHalf) {
+      if (Math.abs(vel) > 0.5) mqDir = vel > 0 ? 1 : -1;
+      mqX -= (0.6 + Math.min(Math.abs(vel) * 0.35, 14)) * mqDir;
+      if (mqX <= -mqHalf) mqX += mqHalf; if (mqX > 0) mqX -= mqHalf;
+      scroller.marquee.style.transform = `translate3d(${mqX.toFixed(1)}px, 0, 0) skewX(${clamp(-vel * 0.4, -10, 10).toFixed(2)}deg)`;
     }
-    if (scroller.subnav) {
-      const h = scroller.dhero ? scroller.dhero.offsetHeight : 0;
-      scroller.subnav.classList.toggle('is-on', y > h - 120);
-    }
-    const top = scroller.dhero || scroller.hero;
-    nav.classList.toggle('is-light', !!top && y < top.offsetHeight - 80);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  addEventListener('resize', () => sizeHS());
+  addEventListener('resize', () => { sizeHS(); lastW = -1; if (scroller.marquee) scroller.marquee._half = 0; });
 
   // Rodapé: palavra gigante
   (function () {
