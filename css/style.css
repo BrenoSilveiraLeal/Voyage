@@ -87,18 +87,21 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .toast.is-on { transform: translate(-50%, 0); opacity: 1; }
 
 /* ---------- cursor ---------- */
-.cursor { position: fixed; inset: 0; z-index: 150; pointer-events: none; mix-blend-mode: difference; transition: opacity .3s; }
-.cursor.is-hidden { opacity: 0; }
-.cursor__dot, .cursor__ring { position: fixed; left: 0; top: 0; border-radius: 50%; will-change: transform; }
-.cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: #fff; transition: opacity .3s; }
-.cursor__ring { width: 38px; height: 38px; margin: -19px 0 0 -19px; border: 1px solid rgba(255, 255, 255, .8); display: grid; place-items: center; transition: width .45s var(--ease), height .45s var(--ease), margin .45s var(--ease), background-color .35s, border-color .35s; }
-.cursor__ring span { color: #fff; font: 600 12px/1.1 var(--sans); text-align: center; opacity: 0; transform: scale(.6); transition: opacity .3s, transform .45s var(--ease); padding: 0 8px; }
-.cursor.is-link .cursor__ring { width: 58px; height: 58px; margin: -29px 0 0 -29px; background: rgba(255, 255, 255, .15); }
-.cursor.is-label { mix-blend-mode: normal; }
+/* Cursor: o container não cobre a tela (display: contents) — só a bolinha e o anel são misturados
+   com a página, em vez da tela inteira a cada frame. Tamanho muda com transform (sem recalcular layout). */
+.cursor { display: contents; }
+.cursor__dot, .cursor__pos { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; will-change: transform; mix-blend-mode: difference; transition: opacity .3s; }
+.cursor.is-hidden .cursor__dot, .cursor.is-hidden .cursor__pos { opacity: 0; }
+.cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff; }
+.cursor__pos { width: 0; height: 0; }
+.cursor__ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .8); display: grid; place-items: center; transform: scale(.396); transition: transform .45s var(--ease), background-color .35s, border-color .35s; }
+.cursor__ring span { color: #fff; font: 600 12px/1.1 var(--sans); text-align: center; opacity: 0; transition: opacity .3s; padding: 0 8px; }
+.cursor.is-link .cursor__ring { transform: scale(.604); background: rgba(255, 255, 255, .15); border-width: 1.7px; }
+.cursor.is-label .cursor__pos { mix-blend-mode: normal; }
 .cursor.is-label .cursor__dot { opacity: 0; }
-.cursor.is-label .cursor__ring { width: 96px; height: 96px; margin: -48px 0 0 -48px; background: var(--accent); border-color: var(--accent); }
-.cursor.is-label .cursor__ring span { opacity: 1; transform: none; }
-.cursor.is-down .cursor__ring { width: 28px; height: 28px; margin: -14px 0 0 -14px; }
+.cursor.is-label .cursor__ring { transform: none; background: var(--accent); border-color: var(--accent); }
+.cursor.is-label .cursor__ring span { opacity: 1; }
+.cursor.is-down .cursor__ring { transform: scale(.29); }
 
 /* ---------- navegação ---------- */
 .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; gap: 24px; padding: 20px var(--gut); color: var(--ink); transition: transform .65s var(--ease-io), background-color .45s, padding .45s, color .45s, box-shadow .45s; view-transition-name: site-nav; }

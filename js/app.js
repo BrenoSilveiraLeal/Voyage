@@ -1475,26 +1475,37 @@
 
   // Cursor personalizado
   if (fine && !reduce) {
-    const cur = $('#cursor'), dot = $('.cursor__dot', cur), ring = $('.cursor__ring', cur), label = $('.cursor__ring span', cur);
-    let mx = -100, my = -100, rx = -100, ry = -100;
+    const cur = $('#cursor'), dot = $('.cursor__dot', cur), ring = $('.cursor__pos', cur), label = $('.cursor__ring span', cur);
+    let mx = -100, my = -100, rx = -100, ry = -100, raf = 0, last = 0, curLab = null, curLink = false;
     document.body.classList.add('has-cursor');
-    addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; cur.classList.remove('is-hidden'); }, { passive: true });
+    // O anel segue o mouse de forma suave mas rápida, igual em 60 Hz ou 144 Hz, e o loop para quando alcança o mouse.
+    function loop(t) {
+      const dt = Math.min(64, t - (last || t)); last = t;
+      const k = 1 - Math.exp(-dt / 45);
+      rx += (mx - rx) * k; ry += (my - ry) * k;
+      if (Math.abs(mx - rx) < 0.1 && Math.abs(my - ry) < 0.1) { rx = mx; ry = my; }
+      ring.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
+      if (rx !== mx || ry !== my) raf = requestAnimationFrame(loop); else { raf = 0; last = 0; }
+    }
+    addEventListener('pointermove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
+      if (rx < -50) { rx = mx; ry = my; } // primeira aparição: sem "voar" do canto
+      if (cur.classList.contains('is-hidden')) cur.classList.remove('is-hidden');
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, { passive: true });
     document.addEventListener('pointerleave', () => cur.classList.add('is-hidden'));
     document.addEventListener('pointerover', e => {
       const lab = e.target.closest('[data-cursor]');
-      const link = e.target.closest('a, button, [role="tab"], select, label, input');
+      const link = !lab && !!e.target.closest('a, button, [role="tab"], select, label, input');
+      if (lab === curLab && link === curLink) return; // nada mudou: não mexe nas classes
+      curLab = lab; curLink = link;
       cur.classList.toggle('is-label', !!lab);
-      cur.classList.toggle('is-link', !lab && !!link);
+      cur.classList.toggle('is-link', link);
       if (lab) label.textContent = lab.dataset.cursor;
-    });
+    }, { passive: true });
     document.addEventListener('pointerdown', () => cur.classList.add('is-down'));
     document.addEventListener('pointerup', () => cur.classList.remove('is-down'));
-    (function loop() {
-      rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
-      dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
-      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
-      requestAnimationFrame(loop);
-    })();
   }
 
   // Loop de rolagem: barra de progresso, menu, parallax, marquee, seção horizontal, roteiro
