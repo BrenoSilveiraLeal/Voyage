@@ -823,6 +823,7 @@
     scroller.subnav = $('.subnav', root);
     scroller.marquee = $('.marquee__track', root);
     lastW = -1; // força o loop de rolagem a recalcular na nova página
+    pauseOffscreen(root);
     $('#nav').classList.toggle('is-light', r.view !== 'stays' && r.view !== 'packages');
     markLoaded(root);
     if (scroller.hero) initHeroSlides(scroller.hero);
@@ -876,6 +877,18 @@
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
+  }
+
+  // Pausa as animações contínuas (zoom das fotos, ilustrações, letreiro) das seções fora da tela.
+  // Rodando fora da vista elas só gastam CPU/GPU e causam travadas na rolagem.
+  function pauseOffscreen(root) {
+    const secs = $$(':scope > *', root);
+    const o = new IntersectionObserver(es => es.forEach(e => {
+      e.target.classList.toggle('anim-off', !e.isIntersecting);
+      if (scroller.marquee && e.target.contains(scroller.marquee)) scroller.marquee._vis = e.isIntersecting;
+    }), { rootMargin: '150px 0px' });
+    secs.forEach(s => o.observe(s));
+    onCleanup(() => o.disconnect());
   }
 
   function magnetic(el) {
@@ -1568,7 +1581,7 @@
       if (scroller.subnav) scroller.subnav.classList.toggle('is-on', y > subH - 120);
       nav.classList.toggle('is-light', topH > 0 && y < topH - 80);
     }
-    if (!reduce && scroller.marquee && mqHalf) {
+    if (!reduce && scroller.marquee && mqHalf && scroller.marquee._vis !== false) {
       if (Math.abs(vel) > 0.5) mqDir = vel > 0 ? 1 : -1;
       mqX -= (0.6 + Math.min(Math.abs(vel) * 0.35, 14)) * mqDir;
       if (mqX <= -mqHalf) mqX += mqHalf; if (mqX > 0) mqX -= mqHalf;

@@ -87,17 +87,18 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .toast.is-on { transform: translate(-50%, 0); opacity: 1; }
 
 /* ---------- cursor ---------- */
-/* Cursor: o container não cobre a tela (display: contents) — só a bolinha e o anel são misturados
-   com a página, em vez da tela inteira a cada frame. Tamanho muda com transform (sem recalcular layout). */
+/* Cursor: sem mix-blend-mode (causava rastro de bolinhas e travava a rolagem no Windows).
+   Anel e ponto em dois tons — claro com contorno escuro — aparecem em fundo claro e escuro.
+   Tamanho muda com transform (sem recalcular layout). */
 .cursor { display: contents; }
-.cursor__dot, .cursor__pos { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; will-change: transform; mix-blend-mode: difference; transition: opacity .3s; }
+.cursor__dot, .cursor__pos { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; will-change: transform; transition: opacity .3s; }
 .cursor.is-hidden .cursor__dot, .cursor.is-hidden .cursor__pos { opacity: 0; }
-.cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff; }
+.cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(29, 26, 22, .55); }
 .cursor__pos { width: 0; height: 0; }
-.cursor__ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .8); display: grid; place-items: center; transform: scale(.396); transition: transform .45s var(--ease), background-color .35s, border-color .35s; }
+.cursor__ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .9); box-shadow: 0 0 0 2.5px rgba(29, 26, 22, .35), inset 0 0 0 2.5px rgba(29, 26, 22, .35); display: grid; place-items: center; transform: scale(.396); transition: transform .45s var(--ease), background-color .35s, border-color .35s, box-shadow .35s; }
 .cursor__ring span { color: #fff; font: 600 12px/1.1 var(--sans); text-align: center; opacity: 0; transition: opacity .3s; padding: 0 8px; }
-.cursor.is-link .cursor__ring { transform: scale(.604); background: rgba(255, 255, 255, .15); border-width: 1.7px; }
-.cursor.is-label .cursor__pos { mix-blend-mode: normal; }
+.cursor.is-link .cursor__ring { transform: scale(.604); background: rgba(255, 255, 255, .15); border-width: 1.7px; box-shadow: 0 0 0 1.7px rgba(29, 26, 22, .35), inset 0 0 0 1.7px rgba(29, 26, 22, .35); }
+.cursor.is-label .cursor__ring { box-shadow: none; }
 .cursor.is-label .cursor__dot { opacity: 0; }
 .cursor.is-label .cursor__ring { transform: none; background: var(--accent); border-color: var(--accent); }
 .cursor.is-label .cursor__ring span { opacity: 1; }
@@ -244,6 +245,7 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 }
 
 /* animações das ilustrações */
+.anim-off, .anim-off * { animation-play-state: paused !important; }
 .drift { animation: drift 26s ease-in-out infinite alternate; }
 .drift-slow { animation: drift 40s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translateX(40px); } }
