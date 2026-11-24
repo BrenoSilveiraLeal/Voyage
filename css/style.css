@@ -224,6 +224,22 @@ body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [rol
 .hero__scroll i::after { content: ''; position: absolute; left: 0; top: 0; width: 1px; height: 50%; background: #fff; animation: scrollcue 1.8s var(--ease-io) infinite; }
 @keyframes scrollcue { from { transform: translateY(-100%); } to { transform: translateY(200%); } }
 
+/* Mantém a capa inteira visível em janelas desktop mais baixas. */
+@media (min-width: 761px) and (max-height: 850px) {
+  .hero { height: 100svh; min-height: 0; padding: 96px 0 104px; }
+  .hero__t { max-width: 14ch; margin-bottom: 18px; font-size: clamp(58px, 7.2vw, 104px); }
+  .hero__lead { margin-bottom: 24px; }
+  .hero__now { bottom: 16px; }
+  .hero__scroll { bottom: 12px; gap: 6px; }
+  .hero__scroll i { height: 28px; }
+}
+@media (min-width: 761px) and (max-height: 700px) {
+  .hero { padding: 82px 0 84px; }
+  .hero__t { font-size: clamp(50px, 6.2vw, 84px); }
+  .hero__lead { margin-bottom: 18px; font-size: 16px; }
+  .hero__scroll { display: none; }
+}
+
 /* animações das ilustrações */
 .drift { animation: drift 26s ease-in-out infinite alternate; }
 .drift-slow { animation: drift 40s ease-in-out infinite alternate; }

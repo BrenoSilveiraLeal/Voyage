@@ -1,6 +1,9 @@
 /* Voyage — aplicação: rotas, páginas, transições e animações. */
 (() => {
   'use strict';
+  // Ao recarregar, comece sempre no topo em vez de restaurar o scroll anterior.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
   const { CATS, TYPES, AMEN, DESTS, QUOTES, EXPERIENCES, ORIGINS } = window.VOYAGE;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
