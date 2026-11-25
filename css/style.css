@@ -920,7 +920,14 @@ body.nav-hidden .subnav.is-on { transform: translate(-50%, -70px); }
   .phead__count { margin-left: 0; width: 100%; }
   .where { border-radius: 28px; }
   .next { border-radius: 28px; }
-  .foot__grid { grid-template-columns: 1fr; }
+  .foot__grid { grid-template-columns: 1fr; gap: 28px; justify-items: center; text-align: center; }
+  .foot__grid p { margin-left: auto; margin-right: auto; }
+  .foot__grid .logo { justify-content: center; }
+  .foot__grid a:hover { transform: none; }
+  .foot__cta { justify-items: center; text-align: center; }
+  .foot__cta .eyebrow { justify-content: center; }
+  .foot__form { width: 100%; text-align: left; }
+  .foot__form .btn { justify-self: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
